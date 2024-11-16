@@ -59,9 +59,9 @@ commands = (
         salesorder_order_id INT,
         salesorder_cust_id INT,
         salesorder_employee_id INT,
-        salesorder_order_date TIMESTAMP,
-        salesorder_required_date TIMESTAMP,
-        salesorder_shipped_date TIMESTAMP,
+        salesorder_order_date DATE,
+        salesorder_required_date DATE,
+        salesorder_shipped_date DATE,
         salesorder_shipper_id INT,
         salesorder_freight DECIMAL(10, 2),
         salesorder_ship_name VARCHAR(40),
@@ -83,7 +83,7 @@ commands = (
     """,
     """
     CREATE TABLE IF NOT EXISTS dim_date (
-        dim_date_id SERIAL PRIMARY KEY,
+        dim_date_id INT PRIMARY KEY,
         date_dim_date_t DATE,
         date_dim_jour INT,
         date_dim_jour_in_mois INT,
@@ -93,14 +93,12 @@ commands = (
         date_dim_fete VARCHAR(80),
         date_dim_mois VARCHAR(20)
     );
-
     """,
     """
     CREATE TABLE IF NOT EXISTS fact_sales (
         id_fact_sales SERIAL PRIMARY KEY,
         nbre_vente INT,
         mt_vente DECIMAL(10, 2),
-        nbre_client INT,
         dim_product_id INT,
         dim_order_id INT,
         dim_customer_id INT,
@@ -206,7 +204,6 @@ query4 = """
    SELECT 
         COUNT(o.orderdetail_product_id) AS nbre_vente,
         SUM(o.orderdetail_unit_price * o.orderdetail_quantity) AS mt_vente,
-        COUNT(DISTINCT o.salesorder_cust_id) AS nbre_client,
         p.dim_product_id AS dim_product_id,
         o.dim_order_id AS dim_order_id,
         c.dim_customer_id AS dim_customer_id,
@@ -224,7 +221,7 @@ query4 = """
 """
 
 # Génération de la dimension temps avec une plage de dates
-date_range = pd.date_range(start="2006-01-01", end="2006-12-31", freq="D")
+date_range = pd.date_range(start="2006-01-01", end="2008-12-31", freq="D")
 df_temps = pd.DataFrame({
     'dim_date_id': (date_range - pd.Timestamp("1970-01-01")) // pd.Timedelta('1D'),  # ID unique pour chaque date
     'date_dim_date_t': date_range,
@@ -237,7 +234,7 @@ df_temps = pd.DataFrame({
 })
 
 # Obtenir les jours fériés pour la plage d'années spécifiée (par exemple, pour la France)
-holidays_us = holidays.CountryHoliday('US', years=range(2006, 2008))
+holidays_us = holidays.CountryHoliday('US', years=range(2006, 2009))
 
 # Ajouter les colonnes 'fete'
 df_temps['date_dim_fete'] = df_temps['dim_date_id'].apply(
